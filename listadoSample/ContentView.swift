@@ -7,10 +7,60 @@
 //
 
 import SwiftUI
+import Combine
+
+class DataSource: ObservableObject {
+    
+    @Published var picture = [String]()
+    
+    init() {
+        let fm = FileManager.default
+        
+        if let path = Bundle.main.resourcePath, let items = try? fm.contentsOfDirectory(atPath: path) {
+            
+            for item in items{
+                if item .hasPrefix("Arte"){
+                    picture.append(item)
+                }
+            }
+        }
+    }
+}
 
 struct ContentView: View {
+    
+    @ObservedObject var datasource = DataSource()
+    
     var body: some View {
-        Text("Hello, World!")
+        
+        NavigationView{
+            List(datasource.picture, id: \.self){ picture in
+                
+                NavigationLink(destination: DetailView(selectedImage: picture)) {
+                    Text(picture)
+                }
+                
+            }.navigationBarTitle(Text("Galería"))
+        }
+   
+    }
+}
+
+struct DetailView: View {
+    
+    @State private var hidesNavigationBar = false
+    var selectedImage: String
+    
+    var body: some View {
+        let img = UIImage(named: selectedImage)!
+        return Image(uiImage: img)
+        .resizable()
+        .aspectRatio(1024/768, contentMode: .fit)
+        .navigationBarTitle(Text(selectedImage), displayMode: .inline)
+        .navigationBarHidden(hidesNavigationBar)
+            .onTapGesture {
+                self.hidesNavigationBar.toggle()
+        }
     }
 }
 
